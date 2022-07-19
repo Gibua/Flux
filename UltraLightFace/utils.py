@@ -3,12 +3,11 @@ import cv2
 import time
 from math import sqrt
 
-def crop(frame, bbox):
-	image = frame.copy()
-	xmin = max(bbox[0], 0)
-	ymin = max(bbox[1], 0)
-	xmax = min(bbox[2], image.shape[1])
-	ymax = min(bbox[3], image.shape[0])
+def crop(image, xmin, ymin, xmax, ymax):
+	xmin = max(xmin, 0)
+	ymin = max(ymin, 0)
+	xmax = min(xmax, image.shape[1])
+	ymax = min(ymax, image.shape[0])
 	cut = image[ymin:ymax, xmin:xmax,:]
 	
 	return cut
@@ -36,11 +35,12 @@ def square_box(result):
 	return [xmin, ymin, xmax, ymax]
 	
 	
-def bbox_from_landmark(landmarks):
-	xmin = min(landmarks[:, 0])
-	ymin = min(landmarks[:, 1])
-	xmax = max(landmarks[:, 0])
-	ymax = max(landmarks[:, 1])
+def parse_roi_box_from_landmark(pts):
+	"""calc roi box from landmark"""
+	xmin = min(pts[:, 0])
+	ymin = min(pts[:, 1])
+	xmax = max(pts[:, 0])
+	ymax = max(pts[:, 1])
 	bbox = [xmin, ymin, xmax, ymax]
 	center = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]
 	radius = max(bbox[2] - bbox[0], bbox[3] - bbox[1]) / 2
@@ -50,32 +50,16 @@ def bbox_from_landmark(landmarks):
 	center_x = (bbox[2] + bbox[0]) / 2
 	center_y = (bbox[3] + bbox[1]) / 2
 
-	bbox = [0] * 4
-	bbox[0] = center_x - llength / 2
-	bbox[1] = center_y - llength / 2
-	bbox[2] = bbox[0] + llength
-	bbox[3] = bbox[1] + llength
+	roi_box = [0] * 4
+	roi_box[0] = center_x - llength / 2
+	roi_box[1] = center_y - llength / 2
+	roi_box[2] = roi_box[0] + llength
+	roi_box[3] = roi_box[1] + llength
 	
-	return bbox
-	
-def int_average(number1, number2):
-	return int(round((number1 + number2) / 2.0))
-	
-def bboxes_average(bbox1, bbox2):
-	bbox = [int_average(bbox1[0], bbox2[0]),
-			int_average(bbox1[1], bbox2[1]),
-			int_average(bbox1[2], bbox2[2]),
-			int_average(bbox1[3], bbox2[3])]
-		
-	return bbox
+	print(ymax)
+	print(roi_box)
 
-def unwrap_bbox(bbox):
-	xmin = bbox[0]
-	ymin = bbox[1]
-	xmax = bbox[2]
-	ymax = bbox[3]
-		
-	return xmin, ymin, xmax, ymax
+	return roi_box
 	
 def average(number1, number2):
 	return (number1 + number2) / 2.0
