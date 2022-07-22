@@ -1,3 +1,6 @@
 [submodule "Tensorflow2.0-PFLD-"]
 	path = Tensorflow2.0-PFLD-
 	url = https://github.com/Gager-Git-life/Tensorflow2.0-PFLD-.git
+[submodule "SADRNet"]
+	path = SADRNet
+	url = https://github.com/Gibua/SADRNet.git

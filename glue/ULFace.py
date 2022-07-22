@@ -25,6 +25,8 @@ class Detector:
 			result[3] = result[3]*(1+0.1)
 			
 			result = self.__square_box(result)
+		else:
+			result = None
 			
 		return is_face_detected, result
 		
@@ -55,5 +57,3 @@ class Detector:
 			ymax = int(round(center+width/2))	
 	
 		return [xmin, ymin, xmax, ymax]
-		
-	

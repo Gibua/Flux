@@ -32,9 +32,9 @@ is_face_detected = False
 i = 0
 
 while True:
-	print("\n\n-------------------------------------------------\n\n")
+	#print("\n\n-------------------------------------------------\n\n")
 	ret, frame = cap.read()
-	print(frame)
+	#print(frame)
 	if not ret: break
 	
 	height, width = frame.shape[:2]
@@ -62,7 +62,9 @@ while True:
 				
 	img = crop(frame, bbox)
 	
+	start_time = time.perf_counter()
 	landmarks = landmark_predictor.predict(img)
+	print(time.perf_counter() - start_time)
 	#print(landmarks)
 	
 	landmarks = landmark_predictor.post_process(landmarks, bbox)
