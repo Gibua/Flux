@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import time
+import numpy as np
 from math import sqrt
 
 def crop(frame, bbox):
@@ -59,7 +60,7 @@ def bbox_from_landmark(landmarks):
 	return bbox
 	
 def bbox_area(bbox):
-	if bbox==None:
+	if len(bbox) == 0:
 		return 0
 	else:
 		return (bbox[2]-bbox[0])*(bbox[3]-bbox[1])
@@ -68,6 +69,7 @@ def bbox_intersect(bbox_current, bbox_prev):
 	if (bbox_current[0] > bbox_prev[2] or bbox_prev[0] > bbox_current[2]) \
 		or (bbox_current[1] > bbox_prev[3] or bbox_prev[1] > bbox_current[3]):
 		return None
+	intersection = np.empty(4)
 	intersection[0] = max(bbox_current[0], bbox_prev[0])
 	intersection[1] = max(bbox_current[1], bbox_prev[1])
 	intersection[2] = min(bbox_current[2], bbox_prev[2])
