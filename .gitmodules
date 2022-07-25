@@ -4,3 +4,6 @@
 [submodule "SADRNet"]
 	path = SADRNet
 	url = https://github.com/Gibua/SADRNet.git
+[submodule "fast_face_alignment"]
+	path = fast_face_alignment
+	url = https://github.com/Gibua/fast_face_alignment.git
