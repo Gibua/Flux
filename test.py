@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath('./SADRNet'))
 
 import config
 
-from glue import PFLD_TFLite, ULFace, SADRNet
+from glue import PFLD_TFLite, ULFace, SADRNet, fast_face_alignment
 from utils.landmark_utils import *
 from utils.face_detection_utils import *
 
@@ -20,7 +20,7 @@ from utils.face_detection_utils import *
 #sys.path.insert(1, '/glue')
 #import glue
 
-landmark_predictor = SADRNet.Predictor()
+landmark_predictor = fast_face_alignment.Predictor()
 face_detector = ULFace.Detector()
 
 cap = cv2.VideoCapture(0)
@@ -43,7 +43,9 @@ while True:
 	
 	is_landmarks_detected = landmarks.size != 0
 	
-	if (i == 0) or (i%20 == 0):
+	#is_face_detected, bbox = face_detector.detect_bbox(frame)
+	
+	if (i == 0) or (i%10 == 0):
 		is_face_detected, last_detection = face_detector.detect_bbox(frame)
 		if is_face_detected and (not is_landmarks_detected):
 			bbox = last_detection.copy()
@@ -57,7 +59,7 @@ while True:
 			
 		# print(intersect_proportion)
 			
-		if (intersect_proportion<0.5):
+		if (intersect_proportion<0.65):
 			is_face_detected, last_detection = face_detector.detect_bbox(frame)
 			if is_face_detected:
 				bbox = last_detection.copy()
