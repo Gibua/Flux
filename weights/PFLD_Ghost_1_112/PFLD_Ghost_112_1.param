@@ -1,0 +1,246 @@
+7767517
+244 281
+Input            input                    0 1 input
+Convolution      357                      1 1 input 357 0=64 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=1728
+BatchNorm        358                      1 1 357 358 0=64
+ReLU             359                      1 1 358 359
+ConvolutionDepthWise 360                      1 1 359 360 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=576 7=64
+BatchNorm        361                      1 1 360 361 0=64
+ReLU             362                      1 1 361 362
+Split            splitncnn_0              1 3 362 362_splitncnn_0 362_splitncnn_1 362_splitncnn_2
+Pooling          364                      1 1 362_splitncnn_2 364 0=1 1=56 11=56 2=56 12=56 3=0 13=0 14=0 15=0 5=1 6=0
+Reshape          372                      1 1 364 372 0=-1
+Convolution      373                      1 1 362_splitncnn_1 373 0=64 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=4096
+BatchNorm        374                      1 1 373 374 0=64
+ReLU             375                      1 1 374 375
+Split            splitncnn_1              1 2 375 375_splitncnn_0 375_splitncnn_1
+ConvolutionDepthWise 376                      1 1 375_splitncnn_1 376 0=64 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=576 7=64
+BatchNorm        377                      1 1 376 377 0=64
+ReLU             378                      1 1 377 378
+Concat           379                      2 1 375_splitncnn_0 378 379 0=0
+Crop             380                      1 1 379 380 -23309=1,0 -23310=1,128 -23311=1,0
+ConvolutionDepthWise 381                      1 1 380 381 0=128 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=1152 7=128
+BatchNorm        382                      1 1 381 382 0=128
+Convolution      383                      1 1 382 383 0=40 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=5120
+BatchNorm        384                      1 1 383 384 0=40
+Split            splitncnn_2              1 2 384 384_splitncnn_0 384_splitncnn_1
+ConvolutionDepthWise 385                      1 1 384_splitncnn_1 385 0=40 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=360 7=40
+BatchNorm        386                      1 1 385 386 0=40
+Concat           387                      2 1 384_splitncnn_0 386 387 0=0
+Crop             388                      1 1 387 388 -23309=1,0 -23310=1,80 -23311=1,0
+ConvolutionDepthWise 389                      1 1 362_splitncnn_0 389 0=64 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=576 7=64
+BatchNorm        390                      1 1 389 390 0=64
+Convolution      391                      1 1 390 391 0=80 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=5120
+BatchNorm        392                      1 1 391 392 0=80
+BinaryOp         393                      2 1 388 392 393 0=0
+Split            splitncnn_3              1 2 393 393_splitncnn_0 393_splitncnn_1
+Convolution      394                      1 1 393_splitncnn_1 394 0=80 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=6400
+BatchNorm        395                      1 1 394 395 0=80
+ReLU             396                      1 1 395 396
+Split            splitncnn_4              1 2 396 396_splitncnn_0 396_splitncnn_1
+ConvolutionDepthWise 397                      1 1 396_splitncnn_1 397 0=80 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=720 7=80
+BatchNorm        398                      1 1 397 398 0=80
+ReLU             399                      1 1 398 399
+Concat           400                      2 1 396_splitncnn_0 399 400 0=0
+Crop             401                      1 1 400 401 -23309=1,0 -23310=1,160 -23311=1,0
+Convolution      402                      1 1 401 402 0=40 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=6400
+BatchNorm        403                      1 1 402 403 0=40
+Split            splitncnn_5              1 2 403 403_splitncnn_0 403_splitncnn_1
+ConvolutionDepthWise 404                      1 1 403_splitncnn_1 404 0=40 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=360 7=40
+BatchNorm        405                      1 1 404 405 0=40
+Concat           406                      2 1 403_splitncnn_0 405 406 0=0
+Crop             407                      1 1 406 407 -23309=1,0 -23310=1,80 -23311=1,0
+BinaryOp         408                      2 1 407 393_splitncnn_0 408 0=0
+Split            splitncnn_6              1 2 408 408_splitncnn_0 408_splitncnn_1
+Convolution      409                      1 1 408_splitncnn_1 409 0=80 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=6400
+BatchNorm        410                      1 1 409 410 0=80
+ReLU             411                      1 1 410 411
+Split            splitncnn_7              1 2 411 411_splitncnn_0 411_splitncnn_1
+ConvolutionDepthWise 412                      1 1 411_splitncnn_1 412 0=80 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=720 7=80
+BatchNorm        413                      1 1 412 413 0=80
+ReLU             414                      1 1 413 414
+Concat           415                      2 1 411_splitncnn_0 414 415 0=0
+Crop             416                      1 1 415 416 -23309=1,0 -23310=1,160 -23311=1,0
+Convolution      417                      1 1 416 417 0=40 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=6400
+BatchNorm        418                      1 1 417 418 0=40
+Split            splitncnn_8              1 2 418 418_splitncnn_0 418_splitncnn_1
+ConvolutionDepthWise 419                      1 1 418_splitncnn_1 419 0=40 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=360 7=40
+BatchNorm        420                      1 1 419 420 0=40
+Concat           421                      2 1 418_splitncnn_0 420 421 0=0
+Crop             422                      1 1 421 422 -23309=1,0 -23310=1,80 -23311=1,0
+BinaryOp         423                      2 1 422 408_splitncnn_0 423 0=0
+Split            splitncnn_9              1 3 423 423_splitncnn_0 423_splitncnn_1 423_splitncnn_2
+Pooling          425                      1 1 423_splitncnn_2 425 0=1 1=28 11=28 2=28 12=28 3=0 13=0 14=0 15=0 5=1 6=0
+Reshape          433                      1 1 425 433 0=-1
+Convolution      434                      1 1 423_splitncnn_1 434 0=120 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=9600
+BatchNorm        435                      1 1 434 435 0=120
+ReLU             436                      1 1 435 436
+Split            splitncnn_10             1 2 436 436_splitncnn_0 436_splitncnn_1
+ConvolutionDepthWise 437                      1 1 436_splitncnn_1 437 0=120 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1080 7=120
+BatchNorm        438                      1 1 437 438 0=120
+ReLU             439                      1 1 438 439
+Concat           440                      2 1 436_splitncnn_0 439 440 0=0
+Crop             441                      1 1 440 441 -23309=1,0 -23310=1,240 -23311=1,0
+ConvolutionDepthWise 442                      1 1 441 442 0=240 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=2160 7=240
+BatchNorm        443                      1 1 442 443 0=240
+Convolution      444                      1 1 443 444 0=48 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=11520
+BatchNorm        445                      1 1 444 445 0=48
+Split            splitncnn_11             1 2 445 445_splitncnn_0 445_splitncnn_1
+ConvolutionDepthWise 446                      1 1 445_splitncnn_1 446 0=48 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=432 7=48
+BatchNorm        447                      1 1 446 447 0=48
+Concat           448                      2 1 445_splitncnn_0 447 448 0=0
+Crop             449                      1 1 448 449 -23309=1,0 -23310=1,96 -23311=1,0
+ConvolutionDepthWise 450                      1 1 423_splitncnn_0 450 0=80 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=720 7=80
+BatchNorm        451                      1 1 450 451 0=80
+Convolution      452                      1 1 451 452 0=96 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=7680
+BatchNorm        453                      1 1 452 453 0=96
+BinaryOp         454                      2 1 449 453 454 0=0
+Split            splitncnn_12             1 2 454 454_splitncnn_0 454_splitncnn_1
+Convolution      455                      1 1 454_splitncnn_1 455 0=144 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=13824
+BatchNorm        456                      1 1 455 456 0=144
+ReLU             457                      1 1 456 457
+Split            splitncnn_13             1 2 457 457_splitncnn_0 457_splitncnn_1
+ConvolutionDepthWise 458                      1 1 457_splitncnn_1 458 0=144 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1296 7=144
+BatchNorm        459                      1 1 458 459 0=144
+ReLU             460                      1 1 459 460
+Concat           461                      2 1 457_splitncnn_0 460 461 0=0
+Crop             462                      1 1 461 462 -23309=1,0 -23310=1,288 -23311=1,0
+Convolution      463                      1 1 462 463 0=48 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=13824
+BatchNorm        464                      1 1 463 464 0=48
+Split            splitncnn_14             1 2 464 464_splitncnn_0 464_splitncnn_1
+ConvolutionDepthWise 465                      1 1 464_splitncnn_1 465 0=48 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=432 7=48
+BatchNorm        466                      1 1 465 466 0=48
+Concat           467                      2 1 464_splitncnn_0 466 467 0=0
+Crop             468                      1 1 467 468 -23309=1,0 -23310=1,96 -23311=1,0
+BinaryOp         469                      2 1 468 454_splitncnn_0 469 0=0
+Split            splitncnn_15             1 2 469 469_splitncnn_0 469_splitncnn_1
+Convolution      470                      1 1 469_splitncnn_1 470 0=144 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=13824
+BatchNorm        471                      1 1 470 471 0=144
+ReLU             472                      1 1 471 472
+Split            splitncnn_16             1 2 472 472_splitncnn_0 472_splitncnn_1
+ConvolutionDepthWise 473                      1 1 472_splitncnn_1 473 0=144 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1296 7=144
+BatchNorm        474                      1 1 473 474 0=144
+ReLU             475                      1 1 474 475
+Concat           476                      2 1 472_splitncnn_0 475 476 0=0
+Crop             477                      1 1 476 477 -23309=1,0 -23310=1,288 -23311=1,0
+Convolution      478                      1 1 477 478 0=48 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=13824
+BatchNorm        479                      1 1 478 479 0=48
+Split            splitncnn_17             1 2 479 479_splitncnn_0 479_splitncnn_1
+ConvolutionDepthWise 480                      1 1 479_splitncnn_1 480 0=48 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=432 7=48
+BatchNorm        481                      1 1 480 481 0=48
+Concat           482                      2 1 479_splitncnn_0 481 482 0=0
+Crop             483                      1 1 482 483 -23309=1,0 -23310=1,96 -23311=1,0
+BinaryOp         484                      2 1 483 469_splitncnn_0 484 0=0
+Split            splitncnn_18             1 3 484 484_splitncnn_0 484_splitncnn_1 484_splitncnn_2
+Pooling          486                      1 1 484_splitncnn_2 486 0=1 1=14 11=14 2=14 12=14 3=0 13=0 14=0 15=0 5=1 6=0
+Reshape          494                      1 1 486 494 0=-1
+Convolution      495                      1 1 484_splitncnn_1 495 0=192 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=18432
+BatchNorm        496                      1 1 495 496 0=192
+ReLU             497                      1 1 496 497
+Split            splitncnn_19             1 2 497 497_splitncnn_0 497_splitncnn_1
+ConvolutionDepthWise 498                      1 1 497_splitncnn_1 498 0=192 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1728 7=192
+BatchNorm        499                      1 1 498 499 0=192
+ReLU             500                      1 1 499 500
+Concat           501                      2 1 497_splitncnn_0 500 501 0=0
+Crop             502                      1 1 501 502 -23309=1,0 -23310=1,384 -23311=1,0
+ConvolutionDepthWise 503                      1 1 502 503 0=384 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=3456 7=384
+BatchNorm        504                      1 1 503 504 0=384
+Convolution      505                      1 1 504 505 0=72 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=27648
+BatchNorm        506                      1 1 505 506 0=72
+Split            splitncnn_20             1 2 506 506_splitncnn_0 506_splitncnn_1
+ConvolutionDepthWise 507                      1 1 506_splitncnn_1 507 0=72 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=648 7=72
+BatchNorm        508                      1 1 507 508 0=72
+Concat           509                      2 1 506_splitncnn_0 508 509 0=0
+Crop             510                      1 1 509 510 -23309=1,0 -23310=1,144 -23311=1,0
+ConvolutionDepthWise 511                      1 1 484_splitncnn_0 511 0=96 1=3 11=3 2=1 12=1 3=2 13=2 4=1 14=1 15=1 16=1 5=0 6=864 7=96
+BatchNorm        512                      1 1 511 512 0=96
+Convolution      513                      1 1 512 513 0=144 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=13824
+BatchNorm        514                      1 1 513 514 0=144
+BinaryOp         515                      2 1 510 514 515 0=0
+Split            splitncnn_21             1 2 515 515_splitncnn_0 515_splitncnn_1
+Convolution      516                      1 1 515_splitncnn_1 516 0=288 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        517                      1 1 516 517 0=288
+ReLU             518                      1 1 517 518
+Split            splitncnn_22             1 2 518 518_splitncnn_0 518_splitncnn_1
+ConvolutionDepthWise 519                      1 1 518_splitncnn_1 519 0=288 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=2592 7=288
+BatchNorm        520                      1 1 519 520 0=288
+ReLU             521                      1 1 520 521
+Concat           522                      2 1 518_splitncnn_0 521 522 0=0
+Crop             523                      1 1 522 523 -23309=1,0 -23310=1,576 -23311=1,0
+Convolution      524                      1 1 523 524 0=72 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        525                      1 1 524 525 0=72
+Split            splitncnn_23             1 2 525 525_splitncnn_0 525_splitncnn_1
+ConvolutionDepthWise 526                      1 1 525_splitncnn_1 526 0=72 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=648 7=72
+BatchNorm        527                      1 1 526 527 0=72
+Concat           528                      2 1 525_splitncnn_0 527 528 0=0
+Crop             529                      1 1 528 529 -23309=1,0 -23310=1,144 -23311=1,0
+BinaryOp         530                      2 1 529 515_splitncnn_0 530 0=0
+Split            splitncnn_24             1 2 530 530_splitncnn_0 530_splitncnn_1
+Convolution      531                      1 1 530_splitncnn_1 531 0=288 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        532                      1 1 531 532 0=288
+ReLU             533                      1 1 532 533
+Split            splitncnn_25             1 2 533 533_splitncnn_0 533_splitncnn_1
+ConvolutionDepthWise 534                      1 1 533_splitncnn_1 534 0=288 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=2592 7=288
+BatchNorm        535                      1 1 534 535 0=288
+ReLU             536                      1 1 535 536
+Concat           537                      2 1 533_splitncnn_0 536 537 0=0
+Crop             538                      1 1 537 538 -23309=1,0 -23310=1,576 -23311=1,0
+Convolution      539                      1 1 538 539 0=72 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        540                      1 1 539 540 0=72
+Split            splitncnn_26             1 2 540 540_splitncnn_0 540_splitncnn_1
+ConvolutionDepthWise 541                      1 1 540_splitncnn_1 541 0=72 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=648 7=72
+BatchNorm        542                      1 1 541 542 0=72
+Concat           543                      2 1 540_splitncnn_0 542 543 0=0
+Crop             544                      1 1 543 544 -23309=1,0 -23310=1,144 -23311=1,0
+BinaryOp         545                      2 1 544 530_splitncnn_0 545 0=0
+Split            splitncnn_27             1 2 545 545_splitncnn_0 545_splitncnn_1
+Convolution      546                      1 1 545_splitncnn_1 546 0=288 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        547                      1 1 546 547 0=288
+ReLU             548                      1 1 547 548
+Split            splitncnn_28             1 2 548 548_splitncnn_0 548_splitncnn_1
+ConvolutionDepthWise 549                      1 1 548_splitncnn_1 549 0=288 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=2592 7=288
+BatchNorm        550                      1 1 549 550 0=288
+ReLU             551                      1 1 550 551
+Concat           552                      2 1 548_splitncnn_0 551 552 0=0
+Crop             553                      1 1 552 553 -23309=1,0 -23310=1,576 -23311=1,0
+Convolution      554                      1 1 553 554 0=72 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=41472
+BatchNorm        555                      1 1 554 555 0=72
+Split            splitncnn_29             1 2 555 555_splitncnn_0 555_splitncnn_1
+ConvolutionDepthWise 556                      1 1 555_splitncnn_1 556 0=72 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=648 7=72
+BatchNorm        557                      1 1 556 557 0=72
+Concat           558                      2 1 555_splitncnn_0 557 558 0=0
+Crop             559                      1 1 558 559 -23309=1,0 -23310=1,144 -23311=1,0
+BinaryOp         560                      2 1 559 545_splitncnn_0 560 0=0
+Split            splitncnn_30             1 3 560 560_splitncnn_0 560_splitncnn_1 560_splitncnn_2
+Pooling          562                      1 1 560_splitncnn_2 562 0=1 1=7 11=7 2=7 12=7 3=0 13=0 14=0 15=0 5=1 6=0
+Reshape          570                      1 1 562 570 0=-1
+Convolution      571                      1 1 560_splitncnn_1 571 0=144 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=20736
+BatchNorm        572                      1 1 571 572 0=144
+ReLU             573                      1 1 572 573
+Split            splitncnn_31             1 2 573 573_splitncnn_0 573_splitncnn_1
+ConvolutionDepthWise 574                      1 1 573_splitncnn_1 574 0=144 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1296 7=144
+BatchNorm        575                      1 1 574 575 0=144
+ReLU             576                      1 1 575 576
+Concat           577                      2 1 573_splitncnn_0 576 577 0=0
+Crop             578                      1 1 577 578 -23309=1,0 -23310=1,288 -23311=1,0
+Convolution      579                      1 1 578 579 0=8 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=2304
+BatchNorm        580                      1 1 579 580 0=8
+Split            splitncnn_32             1 2 580 580_splitncnn_0 580_splitncnn_1
+ConvolutionDepthWise 581                      1 1 580_splitncnn_1 581 0=8 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=72 7=8
+BatchNorm        582                      1 1 581 582 0=8
+Concat           583                      2 1 580_splitncnn_0 582 583 0=0
+Crop             584                      1 1 583 584 -23309=1,0 -23310=1,16 -23311=1,0
+ConvolutionDepthWise 585                      1 1 560_splitncnn_0 585 0=144 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=1296 7=144
+BatchNorm        586                      1 1 585 586 0=144
+Convolution      587                      1 1 586 587 0=16 1=1 11=1 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=2304
+BatchNorm        588                      1 1 587 588 0=16
+BinaryOp         589                      2 1 584 588 589 0=0
+Convolution      590                      1 1 589 590 0=32 1=3 11=3 2=1 12=1 3=1 13=1 4=1 14=1 15=1 16=1 5=0 6=4608
+BatchNorm        591                      1 1 590 591 0=32
+ReLU             592                      1 1 591 592
+Convolution      593                      1 1 592 593 0=128 1=7 11=7 2=1 12=1 3=1 13=1 4=0 14=0 15=0 16=0 5=0 6=200704
+BatchNorm        594                      1 1 593 594 0=128
+ReLU             595                      1 1 594 595
+Reshape          603                      1 1 595 603 0=-1
+Concat           604                      5 1 372 433 494 570 603 604 0=0
+InnerProduct     output                   1 1 604 output 0=196 1=1 2=100352

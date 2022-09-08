@@ -5,32 +5,34 @@ import sys, os
 import copy
 import torch
 
-from src.dataset.dataloader import img_to_tensor, uv_map_to_tensor
-from src.dataset.dataloader import make_data_loader, make_dataset, ImageData
-from src.model.loss import *
-from PIL import Image
-from src.util.printer import DecayVarPrinter
-from src.visualize.render_mesh import render_face_orthographic, render_uvm
-from src.visualize.plot_verts import plot_kpt, compare_kpt
-from src.dataset.uv_face import uvm2mesh
+sys.path.append(os.path.abspath('./modules/SADRNet'))
 
-from src.run.predict import SADRNv2Predictor
+from modules.SADRNet.src.dataset.dataloader import img_to_tensor
+from modules.SADRNet.src.model.loss import uv_kpt_ind
+
+from modules.SADRNet.src.run.predict import SADRNv2Predictor
 
 import config
 
 from glue import ULFace
-from utils.landmark_utils import *
-from utils.face_detection_utils import *
+from utils.landmark import *
+from utils.face_detection import *
 
-from .Detector import Detector
+from .LandmarkPredictor import LandmarkPredictor
 
 
-class Predictor(Detector):
+class Predictor(LandmarkPredictor):
 	
 	def __init__(self):
-		relative_path = './SADRNet/data/saved_model/net_021.pth'
+		relative_path = './modules/SADRNet/data/saved_model/net_021.pth'
 		self.predictor = SADRNv2Predictor(relative_path)
 		self.predictor.model.eval()
+		self._numberoflandmarks = 98
+
+
+	@property
+	def numberoflandmarks(self):
+		return self._numberoflandmarks
 	
 	def pre_process(self, img):
 		resized = cv2.resize(img, dsize=(256,256))
