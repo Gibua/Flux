@@ -1,12 +1,9 @@
-import argparse
+import os
 import cv2
 import numpy as np
-import sys, os
-import copy
 import tensorflow as tf
 
 from scipy.special import softmax, expit
-from functools import partial
 from typing import Optional, Tuple
 
 from modules.TFLitePFLD.Model.utils import parse_arguments, Normalization, color_
@@ -15,6 +12,7 @@ from modules.TFLitePFLD.Model.datasets import DateSet
 from .LandmarkPredictor import LandmarkPredictor
 
 from utils.face_detection import square_box, crop
+from common.mappings import Datasets
 
 import time
 
@@ -28,16 +26,27 @@ class Predictor(LandmarkPredictor):
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
-        self._landmark_count = 98
+        
+        self.__dataset = Datasets.WFLW
+        self.__landmark_count = 98
+
+        self.__pose_is_provided = False
 
 
     @property
     def landmark_count(self):
-        return self._landmark_count
+        return self.__landmark_count
+
+    @property
+    def dataset(self):
+        return self.__dataset
+
+    @property
+    def pose_is_provided(self):
+        return self.__pose_is_provided
 
     def set_input_tensor(self, interpreter, image):
         tensor_index = interpreter.get_input_details()[0]['index']
-        print(interpreter.get_input_details())
         interpreter.set_tensor(tensor_index, image)
 
     def _pre_process_bbox(self, bbox, frame_shape: Optional[Tuple[int, int]] = None):

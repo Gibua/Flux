@@ -31,8 +31,15 @@ class PoseEstimator2D:
 
     def __init__(self,  camera: Camera):
         # iBUG indexes for PNP estimation.
-        self.pnp_indexes = np.array([27, 28, 29, 30,  # nose ridge
-                                     31, 33, 35,      # nose base right, center and left
+        #self.pnp_indexes = np.array([27, 28, 29, 30,  # nose ridge
+        #                             31, 33, 35,      # nose base right, center and left
+        #                             36, 39,          # right eye corners
+        #                             42, 45]          # left eye corners
+        #                             ).astype(int)
+
+        self.pnp_indexes = np.array([8,               # chin
+                                     27, 28, 29, 30,  # nose ridge
+                                     31, 33, 35,      # nose
                                      36, 39,          # right eye corners
                                      42, 45]          # left eye corners
                                      ).astype(int)
@@ -174,4 +181,4 @@ class PoseEstimator2D:
                                           dist_coeffs)
         point_2d = point_2d.reshape(-1, 2)
 
-        return point_2d 
+        return point_2d

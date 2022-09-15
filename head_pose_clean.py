@@ -17,8 +17,30 @@ from modules.OneEuroFilter import OneEuroFilter
 from utils.landmark import *
 from utils.face_detection import *
 
-from glue import PFLD_TFLite, ULFace, PIPNet, RetinaFace, PFLD_UltraLight
+from glue import PFLD_TFLite, ULFace, PIPNet, RetinaFace, PFLD_UltraLight, SynergyNet
 
+
+def projectPoints(points: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, cmat: np.ndarray, scale = 1):
+    rmat = cv2.Rodrigues(rvec)[0]
+
+    projected = ((points.copy()*scale).dot(rmat.T) + tvec.T[0]).dot(cmat.T)
+    
+    projected[:,0:2] = np.divide(projected[:,:2], projected[:,2:])
+    return projected
+
+
+def draw_axis(img, rvec: np.ndarray, center: np.ndarray, scale = 100):
+    axes_points = np.array([[0., 0., 0.],
+                            [1., 0., 0.],
+                            [0., 1., 0.],
+                            [0., 0., 1.] ])
+    axes_points *= scale
+
+    proj = ((axes_points.dot(rmat.T) + center)).astype(int)
+
+    cv2.line(img, (proj[0][0], proj[0][1]), (proj[1][0],proj[1][1]),(0,0,255),4)
+    cv2.line(img, (proj[0][0], proj[0][1]), (proj[2][0],proj[2][1]),(0,255,0),4)
+    cv2.line(img, (proj[0][0], proj[0][1]), (proj[3][0],proj[3][1]),(255,0,0),4)
 
 def putTextCenter(img, text: str, center, fontFace, fontScale: int, color, thickness: int):
     textsize = cv2.getTextSize(text, fontFace, fontScale, thickness)[0]
@@ -32,15 +54,15 @@ def putTextCenter(img, text: str, center, fontFace, fontScale: int, color, thick
 if __name__ == "__main__":
     sys.path.append(os.path.abspath('./modules/Tensorflow2.0-PFLD-'))
 
-    landmark_predictor = PIPNet.Predictor('300W_CELEBA')
-    dataset = Datasets.IBUG
+    landmark_predictor = SynergyNet.Predictor()
+    dataset = landmark_predictor.dataset
 
-    if dataset != Datasets.IBUG:
+    if dataset == Datasets.WFLW:
         mapper = LandmarkMapper(Datasets.WFLW, Datasets.IBUG)
 
     landmarks_n = landmark_predictor.landmark_count
 
-    face_detector = RetinaFace.Detector()
+    face_detector = ULFace.Detector()
 
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -49,7 +71,11 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         height, width = frame.shape[:2]
 
-    cam = Camera(width, height)
+    f = width
+    s_cmat = np.float32([[f, 0, width//2],
+                         [0, f, height//2],
+                         [0, 0, 1]])
+    cam = Camera(width, height, camera_matrix=s_cmat)
 
     hp_estimator = PoseEstimator2D(cam)
 
@@ -99,7 +125,8 @@ if __name__ == "__main__":
     pnp_sum = 0
 
     while cap.isOpened():
-        ret, frame = cap.read()
+        ret, original = cap.read()
+        frame = original.copy()
         if not ret: break
 
         height, width = frame.shape[:2]
@@ -114,8 +141,7 @@ if __name__ == "__main__":
                 bbox = last_detection
                 bbox_prev = last_detection
         if (i != 0) and is_face_detected and is_landmarks_detected:
-            r_corner, l_corner = landmark_predictor.get_outer_eye_corners_idx()
-            print(landmark_predictor.get_outer_eye_corners_idx())
+            r_corner, l_corner = landmark_predictor.get_outer_eye_corners_idxs()
             landmark_bbox = bbox_from_landmark(landmarks, r_corner, l_corner)
 
             xmin, ymin, xmax, ymax = unwrap_bbox(landmark_bbox.astype(np.int32))
@@ -133,11 +159,8 @@ if __name__ == "__main__":
             intersect_area = bbox_area(intersection)
             intersect_proportion = intersect_area/max(landmark_bbox_area,last_detection_area)
 
-            #print("alo vo",intersect_proportion)
-
             if (intersect_proportion<0.50):
                 is_face_detected, bboxes = face_detector.detect_bbox(frame)
-                #print(last_detection)
                 if is_face_detected:
                     last_detection = bboxes[0]
                     bbox = last_detection
@@ -146,24 +169,21 @@ if __name__ == "__main__":
                 bbox_prev = bbox
                 bbox = bboxes_average(landmark_bbox, bbox_prev)
 
-        #bbox[0] = max(bbox[0], 0)
-        #bbox[1] = max(bbox[1], 0)
-        #bbox[2] = min(bbox[2], width-1)
-        #bbox[3] = min(bbox[3], height-1)
-
         if is_face_detected:
             #bbox = face_detector.post_process(bbox)
             bbox = crop_at_corners(bbox, width, height).astype(int)
 
             img = crop(frame, bbox)
 
-            landmarks = landmark_predictor.predict(frame, bbox)
+            if landmark_predictor.pose_is_provided:
+                det_landmarks, det_rvec, det_tvec = landmark_predictor.predict(frame, bbox)
+            else:
+                det_landmarks = landmark_predictor.predict(frame, bbox)
+            landmarks = det_landmarks[:,0:2]
 
             xmin, ymin, xmax, ymax = unwrap_bbox(bbox)
             cv2.rectangle(frame, (xmin, ymin),
                                  (xmax, ymax), (125, 255, 0), 2)
-
-            #print(landmarks)
 
             for j in range(landmarks_n):
                 #t = time.time()
@@ -173,34 +193,11 @@ if __name__ == "__main__":
             for (x, y) in landmarks:
                 cv2.circle(frame, (np.int32(x), np.int32(y)), 1, (125, 255, 0))
 
-            #for point in [33, 38, 50, 46, 60, 64, 68, 72, 55, 59, 76, 82, 85, 16]:
-            #for point in mapper.as_list():
-            #    cv2.circle(frame,
-            #                (np.int32(landmarks[point][0]), np.int32(landmarks[point][1])),
-            #                 1, (0, 0, 255))
-
-            #rvec, tvec = hp_estimator.head_pose_from_landmarks(landmarks, calibration=True)
-
-            eye_center = landmarks[landmark_predictor.get_eye_corners_idxs()[0]].mean(axis=0)
-            #print(np.linalg.norm(eye_center))
-            #print( math.sqrt( (eye_center[0]**2) + (eye_center[1]**2) ) )
-            cv2.circle(frame, (np.int32(eye_center[0]), np.int32(eye_center[1])), 3, (255, 150, 0))
             
-            pnp_start_time = time.perf_counter()
-
-            if dataset != Datasets.IBUG:
+            if dataset not in [Datasets.IBUG, Datasets.AFLW3D]:
                 rvec, tvec = hp_estimator.solve_pose(mapper.map_landmarks(landmarks), True)
             else:
                 rvec, tvec = hp_estimator.solve_pose(landmarks, True)
-
-            pnp_count += 1
-            pnp_sum += time.perf_counter()-pnp_start_time
-            pnp_average = pnp_sum/pnp_count
-            #print(pnp_average)
-
-            #for j in range(len(rvec)):
-                #t = time.time()
-            #    rvec[j] = filter_rvec[j](rvec[j], time.time())
 
             pitch_color = (210,200,0)
             yaw_color   = (50,150,0)
@@ -208,10 +205,18 @@ if __name__ == "__main__":
             cv2.putText(frame, "rvec 1:{:.2f}".format(rvec.flatten()[0]), (0,10+45), cv2.FONT_HERSHEY_PLAIN, 1, pitch_color)
             cv2.putText(frame, "rvec 2:{:.2f}".format(rvec.flatten()[1]), (0,25+45), cv2.FONT_HERSHEY_PLAIN, 1, yaw_color)
             cv2.putText(frame, "rvec 3:{:.2f}".format(rvec.flatten()[2]), (0,40+45), cv2.FONT_HERSHEY_PLAIN, 1, roll_color)
-
-            hp_estimator.draw_axes(frame, rvec, tvec)
+            
+            cx = cam.camera_matrix[0][2]
+            cy = cam.camera_matrix[1][2]
+            #tvec =  np.concatenate( [landmarks[30]-[cx, cy], [(-4)*translation[2]]]).reshape(3,-1)
+            #rvec = head_rot.as_rotvec().reshape((3,1))
+            #hp_estimator.draw_axes(frame, rvec, tvec)
+            rvec = det_rvec
             hp_estimator.draw_angles_text(frame, rvec)
             hp_estimator.draw_annotation_box(frame, rvec, tvec)
+            cam_center = np.array([cx,cy, 0]).reshape(-1,1)
+            rmat = cv2.Rodrigues(rvec)[0]
+            draw_axis(frame, rvec, det_landmarks[30]*[1,1,-1])#, scale = 10)
             
             #for point in hp_estimator.project_model(rvec, tvec):
             #    cv2.circle(frame, point.astype(int), 3, (0, 233, 255))
@@ -222,36 +227,27 @@ if __name__ == "__main__":
 
             rot_mat = cv2.Rodrigues(rvec)[0]
 
-            rmat = np.matrix(rot_mat)
-            tmat = np.matrix(tvec)
-            pmat = np.matrix( FaceModel68.LANDMARKS[0].reshape((3,1))*1000, dtype=np.float32)
-            cmat = np.matrix(cam.camera_matrix)
-            #print(tmat)
-            cam_point = rmat * pmat + tmat
-            world_point = rmat ** -1 * (cam_point - tmat)
+            #project_3D(rmat, tvec, FaceModel68.LANDMARKS*1000)
 
-            ext_mat = np.column_stack((rmat,tmat))
-            pmat_h = np.row_stack((pmat, [1]))
+            #world_point = rmat ** -1 * (cam_point - tmat)
 
-            #print(cam_point)
-            #print(cmat*ext_mat*pmat_h)
-            #print(cmat*cam_point)
-            poin = cmat*cam_point
-            poin[0] /= poin[2]
-            poin[1] /= poin[2]
-            #print(cmat)
-            #print(poin)
+            #ext_mat = np.column_stack((rmat,tmat))
+            #pmat_h = np.row_stack((pmat, [1]))
 
             corner_idx = [36, 45]
 
             ooo = tvec.copy().flatten()+[width/2, height/2, 0]
 
-            #print("/////////", pts_3d[36][:2])
-            cv2.circle(frame, (int(poin[0]), int(poin[1])), 5, (255, 100, 255))
-            for (x, y, z) in FaceModel68.transform_model(rvec, projected).astype(int):
-                cv2.circle(frame, (x, y), 2, (0, 100, 255))
+            #t1 = np.matmul(cam.camera_matrix, (R.from_rotvec(tvec.flatten()).apply( FaceModel68.LANDMARKS*1000 )+tvec.reshape((1,3))).T).T
+            #proj = projectPoints(FaceModel68.LANDMARKS*1000, rvec, tvec, cam.camera_matrix)
 
-            #print(":::::::::",FaceModel68.transform_model(rvec, projected).astype(int)[0][2])
+            _, model_trans, _ = cv2.estimateAffine3D(FaceModel68.LANDMARKS*1000, det_landmarks, ransacThreshold=2, confidence=0.99)
+            
+            #proj = (FaceModel68.LANDMARKS*1000).dot(model_trans[:,:3].T)+model_trans[:,3]
+            #for (x, y, z) in proj.astype(int):
+            #    cv2.circle(frame, (x, y), 2, (255, 100, 255))
+
+            print(tvec)
 
             hp_estimator.project_model(rvec, tvec)
 

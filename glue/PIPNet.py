@@ -1,7 +1,6 @@
+import os
 import cv2
 import numpy as np
-import os
-import copy
 import importlib
 
 import torch
@@ -14,9 +13,10 @@ from scipy.special import softmax, expit
 from PIL import Image
 
 from modules.PIPNet.networks import *
-from modules.PIPNet.functions import *
+from modules.PIPNet.functions import get_meanface, forward_pip
 
 from utils.face_detection import square_box, crop, crop_at_corners
+from common.mappings import Datasets
 
 from .LandmarkPredictor import LandmarkPredictor
 
@@ -30,25 +30,28 @@ class Predictor(LandmarkPredictor):
         if weight == 'WFLW':
             data_name = "WFLW"
             experiment_name = "pip_32_16_60_r18_l2_l1_10_1_nb10"
-            self._landmark_count = 98
+            self.__dataset = Datasets.WFLW
+            self.__landmark_count = 98
 
             self.get_eye_idxs = self._wflw_eye_idxs
             self.get_eye_corners_idxs = self._wflw_eye_corners_idxs
-            self.get_outer_eye_corners_idx = self._wflw_outer_eye_corners_idxs
+            self.get_outer_eye_corners_idxs = self._wflw_outer_eye_corners_idxs
 
         else:
             if weight == '300W_CELEBA':
                 data_name = "data_300W_CELEBA"
                 experiment_name = "pip_32_16_60_r18_l2_l1_10_1_nb10_wcc"
-                self._landmark_count = 68
             elif weight == '300W_COFW_WFLW':
                 data_name = "data_300W_COFW_WFLW"
                 experiment_name = "pip_32_16_60_r18_l2_l1_10_1_nb10_wcc"
-                self._landmark_count = 68
-            
+                
+            self.__dataset = Datasets.IBUG
+            self.__landmark_count = 68
             self.get_eye_idxs = self._ibug_eye_idxs
             self.get_eye_corners_idxs = self._ibug_eye_corners_idxs
-            self.get_outer_eye_corners_idx = self._ibug_outer_eye_corners_idxs
+            self.get_outer_eye_corners_idxs = self._ibug_outer_eye_corners_idxs
+
+        self.__pose_is_provided = False
         
         config_path = 'modules.PIPNet.experiments.{}.{}'.format(data_name, experiment_name)
         weight_path = os.path.join('./weights/PIPNet', data_name, experiment_name)
@@ -88,7 +91,15 @@ class Predictor(LandmarkPredictor):
 
     @property
     def landmark_count(self):
-        return self._landmark_count
+        return self.__landmark_count
+
+    @property
+    def dataset(self):
+        return self.__dataset
+
+    @property
+    def pose_is_provided(self):
+        return self.__pose_is_provided
         
 
     def _pre_process_bbox(self, bbox, frame_shape: Optional[Tuple[int, int]] = None):
@@ -102,7 +113,7 @@ class Predictor(LandmarkPredictor):
         det_bbox[0] -= int(det_width  * (bbox_scale-1)/2)
         det_bbox[1] += int(det_height * (bbox_scale-1)/2)
         det_bbox[2] += int(det_width  * (bbox_scale-1)/2)
-        det_bbox[3] += int(det_height * (bbox_scale-1)/2)
+        #det_bbox[3] += int(det_height * (bbox_scale-1)/2)
 
         if frame_shape is not None:
             frame_height = frame_shape[0]

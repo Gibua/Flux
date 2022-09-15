@@ -1,14 +1,13 @@
-import argparse
 import cv2
 import numpy as np
-import sys, os
-import copy
 
-from ncnn_vulkan import ncnn
+#from ncnn_vulkan import ncnn
+import ncnn
 
 from typing import Optional, Tuple
 
 from utils.face_detection import square_box, crop
+from common.mappings import Datasets
 
 from .LandmarkPredictor import LandmarkPredictor
 
@@ -16,8 +15,10 @@ from .LandmarkPredictor import LandmarkPredictor
 class Predictor(LandmarkPredictor):
 
     def __init__(self):
-
-        self._landmark_count = 98
+        self.__dataset = Datasets.WFLW
+        self.__landmark_count = 98
+        
+        self.__pose_is_provided = False
         
         self.model = ncnn.Net()
 
@@ -36,7 +37,15 @@ class Predictor(LandmarkPredictor):
     
     @property
     def landmark_count(self):
-        return self._landmark_count
+        return self.__landmark_count
+
+    @property
+    def dataset(self):
+        return self.__dataset
+
+    @property
+    def pose_is_provided(self):
+        return self.__pose_is_provided
 
     
     def _pre_process_bbox(self, bbox, frame_shape: Optional[Tuple[int, int]] = None):
@@ -77,7 +86,6 @@ class Predictor(LandmarkPredictor):
         ex.input("input", mat_in)
         #start_time = time.perf_counter()
         ret, mat_out = ex.extract("output")
-        print("yesyesyesyesyesyesyesyesyesyes")
         #print(time.perf_counter() - start_time)
         out = np.array(mat_out.clone())
 

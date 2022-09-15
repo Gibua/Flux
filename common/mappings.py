@@ -5,6 +5,7 @@ import enum
 class Datasets(enum.Enum):
     IBUG = enum.auto()
     WFLW = enum.auto()
+    AFLW3D = enum.auto()
 
 
 class WFLWToIBUG:

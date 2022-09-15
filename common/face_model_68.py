@@ -1,6 +1,7 @@
 import dataclasses
 
 import numpy as np
+import time
 from scipy.spatial.transform import Rotation as R
 
 @dataclasses.dataclass(frozen=True)
@@ -199,6 +200,8 @@ class FaceModel68():
         
         scale = pred_eye_2D_distance/model_eye_2D_distance
         
-        transformed_model = (rotated_model-np.float64([model_eyes_midpoint[0], model_eyes_midpoint[1], 0]))*scale+np.float64([pred_eyes_midpoint[0], pred_eyes_midpoint[1], 0])
+        s = time.perf_counter()
+        transformed_model = (rotated_model-[model_eyes_midpoint[0], model_eyes_midpoint[1], 0])*scale+[pred_eyes_midpoint[0], pred_eyes_midpoint[1], 0]
+        print("t==", time.perf_counter()-s)
 
         return transformed_model

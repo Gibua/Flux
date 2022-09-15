@@ -4,8 +4,15 @@ from typing import Optional, Tuple
 class LandmarkPredictor(ABC):
 
     @property
-    @abstractmethod
     def landmark_count(self):
+        pass
+
+    @property
+    def dataset(self):
+        pass
+
+    @property
+    def pose_is_provided(self):
         pass
 
     @abstractmethod
