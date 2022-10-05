@@ -111,7 +111,7 @@ class Model(nn.Module):
         cls = self.cls_token.repeat( (1, batch_size, 1))
         feature = torch.cat([cls, feature], 0)
         
-        position = torch.from_numpy(np.arange(0, 50))#.cuda()
+        position = torch.from_numpy(np.arange(0, 50)).cuda()
 
         pos_feature = self.pos_embedding(position)
 

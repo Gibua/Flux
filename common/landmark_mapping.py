@@ -16,11 +16,13 @@ class LandmarkMapper:
         elif source == Datasets.IBUG:
             if destination == Datasets.WFLW:
                 map = WFLWToIBUG()
-                self._mapping = self._inverted_mapping(map.mapping)
+                self._mapping = self._invert_mapping(map)
                 self.src_indices = map.wflw_indices
                 self.dest_indices = map.ibug_indices
         else:
             raise ValueError("source not supported")
+
+        self._inverted_dict_mapping = self._invert_mapping(self._mapping)
         self._list = list(self._mapping)
         self._tuples = tuple(self._mapping.items())
         self._np_array = np.array(self.as_list())
@@ -38,7 +40,10 @@ class LandmarkMapper:
     def as_tuples(self):
         return self._tuples
 
-    def _inverted_mapping(self, mapping: dict):
+    def inverted_map(self):
+        return self._inverted_dict_mapping
+    
+    def _invert_mapping(self, mapping: dict):
         inverted_dict_mapping = {v: k for k, v in mapping.items()}
         return inverted_dict_mapping
 

@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from common.landmark_mapping import LandmarkMapper
 from common.mappings import Datasets
 
-from utils.camera import Camera
+from utils.camera import PinholeCamera
 
 import pytheia as pt
 
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     ret, frame = cap.read()
     height, width = frame.shape[:2]
 
-    cap_camera = Camera(width, height)
+    cap_camera = PinholeCamera(width, height)
 
 
     #filter_config_2d = {

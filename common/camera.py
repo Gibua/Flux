@@ -1,6 +1,7 @@
 import numpy as np
 
-class Camera:
+class PinholeCamera:
+
     def __init__(self, width: int, height: int, camera_matrix = None):
         if camera_matrix is None:
             self.camera_matrix = self.estimate_camera_matrix(width, height)
@@ -10,6 +11,7 @@ class Camera:
         self.height = height
         self.dist_coefficients = np.zeros(5, dtype=np.float)
   
+
     @staticmethod
     def estimate_camera_matrix(width: int, height: int):
         c_x = width / 2
@@ -20,3 +22,6 @@ class Camera:
                                     [0.0,   focal, c_y],
                                     [0.0,   0.0,   1.0]])
         return camera_matrix
+
+    def get_focal(self):
+        return self.camera_matrix[0][0]

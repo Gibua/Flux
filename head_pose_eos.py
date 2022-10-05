@@ -9,7 +9,7 @@ from scipy.spatial.transform import Rotation as R
 
 from common.landmark_mapping import LandmarkMapper
 from common.mappings import Datasets
-from common.camera import Camera
+from common.camera import PinholeCamera
 from common.head_pose import PoseEstimator2D
 from common.head_pose_old import PnPHeadPoseEstimator
 from common.face_model_68 import FaceModel68
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         height, width = frame.shape[:2]
 
-    cam = Camera(width, height)
+    cam = PinholeCamera(width, height)
 
     hp_estimator = PoseEstimator2D(cam)
     hp = PnPHeadPoseEstimator()

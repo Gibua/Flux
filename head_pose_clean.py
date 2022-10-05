@@ -1,3 +1,4 @@
+from multiprocessing import current_process
 from re import L
 import sys, os
 import time
@@ -10,12 +11,15 @@ from scipy.spatial.transform import Rotation as R
 
 from common.landmark_mapping import LandmarkMapper
 from common.mappings import Datasets
-from common.camera import Camera
-from common.head_pose import PoseEstimator2D
+from common.camera import PinholeCamera
+from common.head_pose import PoseEstimator2D, draw_axes, draw_angles_text, draw_annotation_box, estimate_orthographic_projection_linear, ScaledOrthoParameters#, EosHeadPoseEstimator
 from common.face_model_68 import FaceModel68
 from modules.OneEuroFilter import OneEuroFilter
+from utils.render import render
 from utils.landmark import *
 from utils.face_detection import *
+
+import pickle
 
 from glue import PFLD_TFLite, ULFace, PIPNet, RetinaFace, PFLD_UltraLight, SynergyNet
 
@@ -29,18 +33,13 @@ def projectPoints(points: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, cmat: 
     return projected
 
 
-def draw_axis(img, rvec: np.ndarray, center: np.ndarray, scale = 100):
-    axes_points = np.array([[0., 0., 0.],
-                            [1., 0., 0.],
-                            [0., 1., 0.],
-                            [0., 0., 1.] ])
-    axes_points *= scale
+def orthoProjection(points: np.ndarray, rvec: np.ndarray, tx, ty, scale):
+    rmat = cv2.Rodrigues(rvec)[0]
+    translation = np.array([tx, ty, 0])
+    projected = ((points.copy()*scale).dot(rmat.T) + translation)
 
-    proj = ((axes_points.dot(rmat.T) + center)).astype(int)
+    return projected
 
-    cv2.line(img, (proj[0][0], proj[0][1]), (proj[1][0],proj[1][1]),(0,0,255),4)
-    cv2.line(img, (proj[0][0], proj[0][1]), (proj[2][0],proj[2][1]),(0,255,0),4)
-    cv2.line(img, (proj[0][0], proj[0][1]), (proj[3][0],proj[3][1]),(255,0,0),4)
 
 def putTextCenter(img, text: str, center, fontFace, fontScale: int, color, thickness: int):
     textsize = cv2.getTextSize(text, fontFace, fontScale, thickness)[0]
@@ -54,8 +53,11 @@ def putTextCenter(img, text: str, center, fontFace, fontScale: int, color, thick
 if __name__ == "__main__":
     sys.path.append(os.path.abspath('./modules/Tensorflow2.0-PFLD-'))
 
-    landmark_predictor = SynergyNet.Predictor()
+    landmark_predictor = PFLD_TFLite.Predictor()
     dataset = landmark_predictor.dataset
+
+    with open("./common/ICTFaceModel.pkl", "rb") as ICT_file:
+        ICT_Model = pickle.load(ICT_file)
 
     if dataset == Datasets.WFLW:
         mapper = LandmarkMapper(Datasets.WFLW, Datasets.IBUG)
@@ -75,7 +77,7 @@ if __name__ == "__main__":
     s_cmat = np.float32([[f, 0, width//2],
                          [0, f, height//2],
                          [0, 0, 1]])
-    cam = Camera(width, height, camera_matrix=s_cmat)
+    cam = PinholeCamera(width, height, camera_matrix=s_cmat)
 
     hp_estimator = PoseEstimator2D(cam)
 
@@ -123,6 +125,8 @@ if __name__ == "__main__":
 
     pnp_count = 0
     pnp_sum = 0
+
+    #eos = EosHeadPoseEstimator()
 
     while cap.isOpened():
         ret, original = cap.read()
@@ -192,12 +196,16 @@ if __name__ == "__main__":
 
             for (x, y) in landmarks:
                 cv2.circle(frame, (np.int32(x), np.int32(y)), 1, (125, 255, 0))
-
             
             if dataset not in [Datasets.IBUG, Datasets.AFLW3D]:
-                rvec, tvec = hp_estimator.solve_pose(mapper.map_landmarks(landmarks), True)
+                mapped_landmarks = mapper.map_landmarks(landmarks)
+                rvec, tvec = hp_estimator.solve_pose_68_points(mapper.map_landmarks(landmarks), True)
+                xy_center = mapped_landmarks[30]
             else:
-                rvec, tvec = hp_estimator.solve_pose(landmarks, True)
+                rvec, tvec = hp_estimator.solve_pose_68_points(landmarks, True)
+                xy_center = landmarks[30]
+
+            
 
             pitch_color = (210,200,0)
             yaw_color   = (50,150,0)
@@ -211,43 +219,32 @@ if __name__ == "__main__":
             #tvec =  np.concatenate( [landmarks[30]-[cx, cy], [(-4)*translation[2]]]).reshape(3,-1)
             #rvec = head_rot.as_rotvec().reshape((3,1))
             #hp_estimator.draw_axes(frame, rvec, tvec)
-            rvec = det_rvec
-            hp_estimator.draw_angles_text(frame, rvec)
-            hp_estimator.draw_annotation_box(frame, rvec, tvec)
+            #rvec = det_rvec
+            draw_angles_text(frame, rvec)
+            draw_annotation_box(frame, rvec, tvec, cam)
             cam_center = np.array([cx,cy, 0]).reshape(-1,1)
             rmat = cv2.Rodrigues(rvec)[0]
-            draw_axis(frame, rvec, det_landmarks[30]*[1,1,-1])#, scale = 10)
+            draw_axes(frame, rvec, det_landmarks[mapper.inverted_map()[30]])#, scale = 10)
             
             #for point in hp_estimator.project_model(rvec, tvec):
             #    cv2.circle(frame, point.astype(int), 3, (0, 233, 255))
 
-            projected = hp_estimator.project_model(rvec, tvec)
-            for point in projected:
-                cv2.circle(frame, point.astype(int), 3, (0, 233, 255))
+            cv2.circle(frame, landmarks[97].astype(int), 3, (0, 0, 255))
+            #projected = hp_estimator.project_model(rvec, tvec)
+            #projected = orthoProjection(hp_estimator.model_points_68, rvec, xy_center[0], xy_center[1], cam.get_focal()/tvec[2][0])
+            
+            projected = projectPoints(ICT_Model['neutral'], rvec, tvec, cam.camera_matrix)
+
+            #for point in projected.astype(int):
+            #    cv2.circle(frame, (point[0], point[1]), 3, (0, 233, 255))
+            #frame = render(frame, [projected.T.astype(np.float32)], ICT_Model['topology'].astype(np.int32), alpha=0.7)
+            for tri in ICT_Model['topology']:
+                cv2.line(frame, projected[tri[0]][:2].astype(int), projected[tri[1]][:2].astype(int), (0,255,0),1)
+                cv2.line(frame, projected[tri[0]][:2].astype(int), projected[tri[2]][:2].astype(int), (0,255,0),1)
+                cv2.line(frame, projected[tri[1]][:2].astype(int), projected[tri[2]][:2].astype(int), (0,255,0),1)
+
 
             rot_mat = cv2.Rodrigues(rvec)[0]
-
-            #project_3D(rmat, tvec, FaceModel68.LANDMARKS*1000)
-
-            #world_point = rmat ** -1 * (cam_point - tmat)
-
-            #ext_mat = np.column_stack((rmat,tmat))
-            #pmat_h = np.row_stack((pmat, [1]))
-
-            corner_idx = [36, 45]
-
-            ooo = tvec.copy().flatten()+[width/2, height/2, 0]
-
-            #t1 = np.matmul(cam.camera_matrix, (R.from_rotvec(tvec.flatten()).apply( FaceModel68.LANDMARKS*1000 )+tvec.reshape((1,3))).T).T
-            #proj = projectPoints(FaceModel68.LANDMARKS*1000, rvec, tvec, cam.camera_matrix)
-
-            _, model_trans, _ = cv2.estimateAffine3D(FaceModel68.LANDMARKS*1000, det_landmarks, ransacThreshold=2, confidence=0.99)
-            
-            #proj = (FaceModel68.LANDMARKS*1000).dot(model_trans[:,:3].T)+model_trans[:,3]
-            #for (x, y, z) in proj.astype(int):
-            #    cv2.circle(frame, (x, y), 2, (255, 100, 255))
-
-            print(tvec)
 
             hp_estimator.project_model(rvec, tvec)
 
@@ -260,6 +257,7 @@ if __name__ == "__main__":
             break
         if ((k & 0xFF) == ord('c')) and is_face_detected:
             hp_estimator.set_calibration(landmarks)
+            #hp_estimator.set_calibration(rvec)
 
     cap.release()
     cv2.destroyAllWindows()

@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from utils.camera import Camera
+from utils.camera import PinholeCamera
 
 
 @dataclasses.dataclass(frozen=True)

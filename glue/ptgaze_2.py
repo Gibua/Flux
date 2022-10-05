@@ -10,17 +10,17 @@ from omegaconf import DictConfig
 from scipy.spatial.transform import Rotation
 
 # from modules.ptgaze.utils import *
-from utils.camera import Camera
+from utils.camera import PinholeCamera
 
 
 class GazeEstimator():
 	
-	def __init__(self, camera: Camera):
+	def __init__(self, camera: PinholeCamera):
 		self.camera = camera
 		normalized_camera_mat = np.float32([[960.,   0., 30.], 
 											[  0., 960., 18.],
 											[  0.,   0.,  1.]])
-		self._normalized_camera = Camera(60, 36, normalized_camera_mat)
+		self._normalized_camera = PinholeCamera(60, 36, normalized_camera_mat)
 		self._normalized_camera_distance = 0.6
 		
 	
