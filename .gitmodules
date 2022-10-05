@@ -7,3 +7,6 @@
 [submodule "modules/faster_retinaface"]
 	path = modules/faster_retinaface
 	url = https://github.com/1996scarlet/faster-mobile-retinaface.git
+[submodule "modules/eos"]
+	path = modules/eos
+	url = https://github.com/patrikhuber/eos.git
