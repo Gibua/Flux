@@ -4,7 +4,7 @@ import os
 import sys
 import copy
 
-from common.face_model_68 import FaceModel68
+from common.face_model import FaceModel68
 
 
 def inter_ocular_dist(landmarks):

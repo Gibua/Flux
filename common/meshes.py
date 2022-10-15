@@ -1,7 +1,8 @@
 import numpy as np
 
-from typing import List
-
+from typing import List, Optional
+import numpy.typing as npt
+from scipy.sparse import csr_matrix
 
 #class Mesh:
 #
@@ -23,41 +24,67 @@ from typing import List
 
 class Model:
 
-    def __init__(self, neutral_vertices: np.ndarray, tri_faces: np.ndarray, blendshapes_arr: np.ndarray, name_list) -> None:
+    def __init__(self, neutral_vertices: np.ndarray, tri_faces: np.ndarray,
+                       blendshapes_arr: Optional[np.ndarray] = None,
+                       name_list: Optional[npt.ArrayLike] = None) -> None:
+        # blendshapes_arr shape = (n of blendshapes, n of vertices, dimensions (3))
+
         self.neutral_vertices = neutral_vertices
         self.faces = tri_faces
-
-        self.n_blendshapes = len(name_list)
         self.n_vertices = neutral_vertices.shape[0]
 
-        self.d_blendshape_mat = blendshapes_arr
+        if blendshapes_arr is not None or name_list is not None:
+            assert name_list is not None, "blendshape names not provided"
+            assert blendshapes_arr is not None, "array of blendshape vertices not provided"
 
-        #x = d_bss[:,0,:]
-        #y = d_bss[:,1,:]
-        #z = d_bss[:,2,:]
+            self.bs_names = name_list
+            self.n_blendshapes = len(name_list)
 
-        #r_x = ((np.absolute(x) > 1e-5)*x)
-        #r_y = ((np.absolute(y) > 1e-5)*y)
-        #r_z = ((np.absolute(z) > 1e-5)*z)
+            assert self.n_blendshapes == blendshapes_arr.shape[0], "number of blendshapes in blendshapes_arr do not match with the provided names (check array shape)"
+            assert blendshapes_arr.shape[1] == self.neutral_vertices.shape[0], "number of vertices in the blendshapes does not match neutral mesh"
 
-        #s_x = csr_matrix(r_x)
-        #s_y = csr_matrix(r_y)
-        #s_z = csr_matrix(r_z)
-        
-        
+            self._name_to_idx = {name: idx for idx, name in enumerate(self.bs_names) }
 
-    @classmethod
-    def from_dict(cls, neutral_vertices: np.ndarray, tri_faces: np.ndarray, blendshape_dict: dict):
-        blendshape_keys = list(blendshape_dict.keys())
+            x = blendshapes_arr.T[0]
+            y = blendshapes_arr.T[1]
+            z = blendshapes_arr.T[2]
 
-        bs_names = {}
-        for i, name in enumerate(blendshape_keys):
-            bs_names[name] = i
-        d_blendshape_mat = np.moveaxis( np.array(list(blendshape_dict['deltas'].values())), [0, 1, 2], [2, 0, 1] )
+            r_x = ((np.absolute(x) > 1e-5)*x)
+            r_y = ((np.absolute(y) > 1e-5)*y)
+            r_z = ((np.absolute(z) > 1e-5)*z)
 
-        return cls(neutral_vertices, tri_faces, d_blendshape_mat, bs_names)
+            self.sparse_bs_x = csr_matrix(r_x)
+            self.sparse_bs_y = csr_matrix(r_y)
+            self.sparse_bs_z = csr_matrix(r_z)
 
-    #def apply_weights(self, w):
-    #    return np.array([self.sparse_x@w.flatten(),
-    #                     self.sparse_y@w.flatten(),
-    #                     self.sparse_z@w.flatten()]).T
+            self.apply_weights      = self._apply_weights
+            self.get_blendshape_arr = self._get_blendshape_arr
+            self.get_blendshape     = self._get_blendshape
+            self.bs_name_from_idx   = self._bs_name_from_idx
+            self.bs_idx_from_name   = self._bs_idx_from_name
+
+
+    def _apply_weights(self, w):
+        return self.neutral_vertices + np.array([self.sparse_bs_x@w,
+                                                 self.sparse_bs_y@w,
+                                                 self.sparse_bs_z@w]).squeeze().T
+
+
+    def _get_blendshape(self, idx: int):
+        return np.array([self.sparse_bs_x[:, idx].toarray(),
+                         self.sparse_bs_y[:, idx].toarray(),
+                         self.sparse_bs_z[:, idx].toarray()]).T.squeeze()
+
+
+    def _get_blendshape_arr(self):
+        return np.array([self.sparse_bs_x.toarray(),
+                         self.sparse_bs_y.toarray(),
+                         self.sparse_bs_z.toarray()]).T
+
+
+    def _bs_name_from_idx(self, idx: int):
+        return self.bs_names[idx]
+
+
+    def _bs_idx_from_name(self, name: str):
+        return self._name_to_idx[name]

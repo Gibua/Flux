@@ -10,3 +10,6 @@
 [submodule "modules/eos"]
 	path = modules/eos
 	url = https://github.com/patrikhuber/eos.git
+[submodule "modules/SynergyNet"]
+	path = modules/SynergyNet
+	url = https://github.com/choyingw/SynergyNet.git

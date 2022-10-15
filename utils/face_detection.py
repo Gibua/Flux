@@ -37,7 +37,7 @@ def square_box(box):
 
  
 def bbox_from_landmark(landmarks, r_eye_corner_idx, l_eye_corner_idx):
-    start = time.perf_counter()
+    #start = time.perf_counter()
     mins = np.amin(landmarks, axis=0)
     maxes = np.amax(landmarks, axis=0)
 
@@ -75,7 +75,7 @@ def bbox_from_landmark(landmarks, r_eye_corner_idx, l_eye_corner_idx):
     bbox_calc[2] = center[0] + (new_width*X_SCALER/2)
     bbox_calc[3] = center[1] + (new_height/2)
 
-    print("t = ",time.perf_counter()-start)
+    #print("t = ",time.perf_counter()-start)
     
     return bbox_calc
 

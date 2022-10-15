@@ -5,7 +5,7 @@ import cv2
 
 from common.landmark_mapping import LandmarkMapper
 from common.mappings import Datasets
-from common.face_model_68 import FaceModel68
+from common.face_model import FaceModel68
 
 class PnPHeadPoseEstimator(object):
     ibug_ids_to_use = sorted([
