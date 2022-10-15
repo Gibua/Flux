@@ -1,9 +1,6 @@
 import os
 import time
-import os
-import time
 import numpy as np
-import pickle
 import pickle
 import cv2
 from scipy.spatial.transform import Rotation as R
@@ -131,7 +128,7 @@ class PoseEstimator2D:
             it will only inroduce a bigger tvec but the same rotation matrix
     """
 
-    def __init__(self,  camera: PinholePinholeCamera):
+    def __init__(self,  camera: PinholeCamera):
         # iBUG indexes for PNP estimation.
         #self.pnp_indexes = np.array([27, 28, 29, 30,  # nose ridge
         #                             31, 33, 35,      # nose base right, center and left
@@ -158,7 +155,7 @@ class PoseEstimator2D:
 
 
     def set_img_shape(self, width: int, height: int):
-        self.camera = PinholePinholeCamera(width, height)
+        self.camera = PinholeCamera(width, height)
 
 
     def set_calibration(self, landmarks_2D: np.ndarray):
@@ -226,19 +223,10 @@ class PoseEstimator2D:
         detected_rvec, tvec = cv2.solvePnPRefineVVS(landmarks_3D, landmarks_2D,
                                        self.camera.camera_matrix, None,
                                        rvec, tvec)
-        #success, detected_rvec, tvec = cv2.solvePnP(landmarks_3D, landmarks_2D,
-        #                                            self.camera.camera_matrix, None,
-        #                                            rvec=rvec, tvec=tvec, useExtrinsicGuess=True,
-        #                                            flags=cv2.SOLVEPNP_ITERATIVE)
-        detected_rvec, tvec = cv2.solvePnPRefineVVS(landmarks_3D, landmarks_2D,
-                                       self.camera.camera_matrix, None,
-                                       rvec, tvec)
         if calibration:
             rvec = detected_rvec - self.calibration_rvec
         else:
             rvec = detected_rvec
-
-        #pitch_yaw_roll = R.from_rotvec(rvec.flatten()).as_euler('xyz', degrees=True)
 
         #pitch_yaw_roll = R.from_rotvec(rvec.flatten()).as_euler('xyz', degrees=True)
 

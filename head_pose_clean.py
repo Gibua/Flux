@@ -299,7 +299,6 @@ if __name__ == "__main__":
         if ((k & 0xFF) == ord('c')) and is_face_detected:
             hp_estimator.set_calibration(landmarks)
             #hp_estimator.set_calibration(rvec)
-            #hp_estimator.set_calibration(rvec)
 
     cap.release()
     cv2.destroyAllWindows()
