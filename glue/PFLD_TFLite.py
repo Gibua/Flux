@@ -63,7 +63,6 @@ class Predictor(LandmarkPredictor):
 
         imgrgb = cv2.cvtColor(cropped, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(imgrgb, dsize=(112,112))
-        cv2.imshow("3", resized)
         image_rgb = resized[..., ::-1]
         image_norm = image_rgb.astype(np.float32)
         cv2.normalize(image_norm, image_norm,

@@ -147,9 +147,9 @@ class PoseEstimator2D:
 
         # 3D Face model 3D landmarks
         #self.model_points_68 = FaceModel68.LANDMARKS.copy()*1000 #the model is in millimeters
-        print('open is assigned to %r' % open)
-        ICT_Model = ICTFaceModel68.from_pkl("./common/ICTFaceModel.pkl", load_blendshapes=False)
-        self.model_points_68 = ICT_Model.neutral_vertices
+        #print('open is assigned to %r' % open)
+        ICT_Model_68 = ICTFaceModel68.from_pkl("./common/ICTFaceModel.pkl", load_blendshapes=False)
+        self.model_points_68 = ICT_Model_68.neutral_vertices
 
         self.calibration_rvec = np.zeros((3, 1))
 

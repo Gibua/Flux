@@ -31,7 +31,7 @@ class SlothModel():
                                       dtype=torch.float32, 
                                       device=self.device)
 
-        verts_neutral = np.array(assimp_scene.meshes[0].vertices, dtype=np.float32)
+        verts_neutral = np.array(assimp_scene.meshes[0].vertices, dtype=np.float32)*10
         self.verts_neutral = torch.tensor(verts_neutral, 
                                           device=self.device, 
                                           dtype=torch.float32)@self._std_rmat.T
@@ -42,7 +42,7 @@ class SlothModel():
         self.bs_name_arr = np.array([target.name for target in assimp_scene.meshes[0].anim_meshes if 'Basis' not in target.name], dtype=str)
         
         rmat_np = self._std_rmat.T.cpu().numpy()
-        target_arr = np.array([target.vertices@rmat_np for target in assimp_scene.meshes[0].anim_meshes if 'Basis' not in target.name])
+        target_arr = np.array([(target.vertices)@rmat_np for target in assimp_scene.meshes[0].anim_meshes if 'Basis' not in target.name])*10
         target_tensor = torch.tensor(target_arr, device=self.device, dtype=torch.float32)
         delta_tensor = target_tensor - self.verts_neutral
 
@@ -80,6 +80,7 @@ class SlothModel():
         return mesh
 
 
+
 class ICTFaceModel(Model):
     def __init__(self, ICT_dict: dict, load_blendshapes = True) -> None:
         neutral_vertices = ICT_dict['neutral']
@@ -101,7 +102,7 @@ class ICTFaceModel(Model):
 
 
 class ICTFaceModel68(Model):
-    def __init__(self, ICT_dict: dict, load_blendshapes = True) -> None:
+    def __init__(self, ICT_dict: dict, load_blendshapes = True, store_bs_dict = False) -> None:
         self.sparse_68_idxs = [1225,1888,1052,367,1719,1722,2199,1447,966,3661,4390,3927,3924,2608,
                                 3272,4088,3443,268,493,1914,2044,1401,3615,4240,4114,2734,2509,978,
                                 4527,4942,4857,1140,2075,1147,4269,3360,1507,1542,1537,1528,1518,
@@ -112,6 +113,8 @@ class ICTFaceModel68(Model):
         tri_faces = ICT_dict['topology']
 
         if load_blendshapes:
+            if store_bs_dict:
+                self.bs_dict = ICT_dict['deltas']
             blendshape_names = list(ICT_dict['deltas'].keys())
             blendshape_arr = np.array(list(ICT_dict['deltas'].values()))[:,self.sparse_68_idxs]
             super().__init__(neutral_vertices, tri_faces, blendshape_arr, blendshape_names)
@@ -119,10 +122,71 @@ class ICTFaceModel68(Model):
             super().__init__(neutral_vertices, tri_faces)
 
     @classmethod
-    def from_pkl(cls, pkl_path: str, load_blendshapes = True):
+    def from_pkl(cls, pkl_path: str, load_blendshapes = True, store_bs_dict = False):
         with open(pkl_path, "rb") as ICT_file:
             ICT_dict = pickle.load(ICT_file)
-        return cls(ICT_dict, load_blendshapes)
+        return cls(ICT_dict, load_blendshapes, store_bs_dict)
+
+
+
+class ICTModelPT3D():
+    @torch.no_grad()
+    def __init__(self, pkl_path: str, device_str="cuda:0") -> None:
+        self.device = torch.device(device_str)
+        torch.cuda.empty_cache()
+
+        ICT_model = ICTFaceModel.from_pkl(pkl_path, load_blendshapes = True)
+
+        std_rot = R.from_euler("xyz", [0, 0, 180] ,degrees=True)
+        self._std_rmat = torch.tensor(std_rot.as_matrix(), 
+                                      dtype=torch.float32, 
+                                      device=self.device)
+
+        self.verts_neutral = torch.tensor(ICT_model.neutral_vertices, 
+                                          device=self.device, 
+                                          dtype=torch.float32)@self._std_rmat.T
+        
+        self.faces = torch.tensor(ICT_model.faces, device=self.device, dtype=torch.float32)
+
+        self.bs_name_arr = np.array(ICT_model.bs_names, dtype=str)
+        
+        rmat_np = self._std_rmat.T.cpu().numpy()
+        delta_arr = ICT_model.get_blendshape_arr()
+        delta_tensor = torch.tensor(delta_arr@rmat_np, device=self.device, dtype=torch.float32)
+
+        x = delta_tensor.swapaxes(0, 2)[0]
+        y = delta_tensor.swapaxes(0, 2)[1]
+        z = delta_tensor.swapaxes(0, 2)[2]
+        
+        self.sparse_bs_x = x.to_sparse_csr()
+        self.sparse_bs_y = y.to_sparse_csr()
+        self.sparse_bs_z = z.to_sparse_csr()
+
+        del ICT_model
+
+        io = IO()
+        verts_rgb = torch.ones_like(self.verts_neutral)[None]
+        textures = Textures(verts_rgb=verts_rgb.to(self.device))
+        self.neutral_pt3d_mesh =  Meshes( verts=[self.verts_neutral.to(self.device)], faces=[self.faces.to(self.device)], textures=textures)
+
+
+    @torch.no_grad()
+    def apply_weights_to_deltas(self, w):
+        verts =  torch.vstack([torch.mv(self.sparse_bs_x, w.ravel()),
+                               torch.mv(self.sparse_bs_y, w.ravel()),
+                               torch.mv(self.sparse_bs_z, w.ravel())]).squeeze().T
+        return verts
+
+    @torch.no_grad()
+    def apply_weights(self, w):
+        verts =  self.verts_neutral + self.apply_weights_to_deltas(w)
+        return verts
+
+    @torch.no_grad()
+    def apply_weights_to_mesh(self, w):
+        mesh = self.neutral_pt3d_mesh.update_padded(self.apply_weights(w).unsqueeze(0))
+        return mesh
+
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 class PinholeCamera:
 
@@ -23,5 +24,21 @@ class PinholeCamera:
                                     [0.0,   0.0,   1.0]])
         return camera_matrix
 
+
     def get_focal(self):
         return self.camera_matrix[0][0]
+
+    
+    def get_center(self):
+        cx = self.camera_matrix[0][2]
+        cy = self.camera_matrix[1][2]
+        return (cx, cy)
+
+
+    def project_points(self, points: np.ndarray, rvec: np.ndarray, tvec: np.ndarray, scale = 1):
+        rmat = cv2.Rodrigues(rvec)[0]
+        
+        projected = ((points.copy()*scale).dot(rmat.T) + tvec.ravel()).dot(self.camera_matrix.T)
+
+        projected = np.divide(projected[:,:2], projected[:,2:])
+        return projected
