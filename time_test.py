@@ -131,7 +131,7 @@ def putTextCenter(img, text: str, center, fontFace, fontScale: int, color, thick
 
 
 #if __name__ == "__main__":
-def main(video_getter, face_detector, landmark_predictor):
+def main(video_getter, face_detector, landmark_predictor,  bs_to_exclude):
     ret, frame = video_getter.read()
     height, width = frame.shape[:2]
 
@@ -154,7 +154,7 @@ def main(video_getter, face_detector, landmark_predictor):
 
     bs_mapper = generate_w_mapper(ICT_Model.bs_names, retarg_model.bs_name_arr.tolist())#, use_jax=True)
 
-    fitter = ExpressionFitting(cam.camera_matrix)#, bs_mapper = bs_mapper)
+    fitter = ExpressionFitting(cam.camera_matrix, bs_to_ignore = bs_to_exclude)#, bs_mapper = bs_mapper)
 
     #filter_config_2d = {
     #    'freq': 30,
@@ -294,7 +294,14 @@ def main(video_getter, face_detector, landmark_predictor):
             #draw_annotation_box(frame, rvec, tvec, cam)
             #draw_axes(frame, rvec, tvec, cam.camera_matrix)#, scale = 1000)
 
+            curr_start = time.perf_counter()
+
             w_dlp = fitter.fit(landmarks, rvec, tvec, float(b_fit), float(b_prior), float(b_sparse), method = 'jaxopt_lm')#, debug=True)
+
+            intervals_list.append(time.perf_counter() - curr_start)
+            captures_total += 1
+
+            w_dlp_2 = w_dlp
 
             #intervals_list.append(time.perf_counter() - curr_start)
             #captures_total += 1
@@ -375,8 +382,7 @@ def main(video_getter, face_detector, landmark_predictor):
                 else:
                     b_sparse -= s_step
         
-        intervals_list.append(time.perf_counter() - curr_start)
-        captures_total += 1
+        
         #if captures_total%100 ==0:
         #print(captures_total, end = ' ')
         if captures_total >= 1000:
@@ -388,6 +394,14 @@ if __name__ == "__main__":
     import traceback
 
     video_getter = VideoGet(src=0).start()
+    ICT_Model_68 = ICTFaceModel68.from_pkl("./common/ICTFaceModel.pkl", load_blendshapes=True)
+
+    n_bs = ICT_Model_68.n_blendshapes
+    bs_names = list(ICT_Model_68.bs_names)
+
+    face_detector = ULFace.Detector()
+    landmark_predictor = PFLD_UltraLight.Predictor()
+
     if not video_getter.cap.isOpened():
         print('camera not detected')
         video_getter.stop()
@@ -395,31 +409,25 @@ if __name__ == "__main__":
         sys.exit()
     else:
         try:
-            for f_detector in ['RetinaFace', 'ULFace']:
-                if f_detector == 'RetinaFace':
-                    face_detector = RetinaFace.Detector()
-                elif f_detector == 'ULFace':
-                    face_detector = ULFace.Detector()
-                
-                for lm_detector in ['PFLD_UltraLight', 'PFLD_TFLite', 'SynergyNet', 'PIPNet_WFLW', 'PIPNet_300W']:
-                    if lm_detector == 'PFLD_UltraLight':
-                        landmark_predictor = PFLD_UltraLight.Predictor()
-                    elif lm_detector == 'PFLD_TFLite':
-                        landmark_predictor = PFLD_TFLite.Predictor()
-                    elif lm_detector == 'SynergyNet':
-                        landmark_predictor = SynergyNet.Predictor()
-                    elif lm_detector == 'PIPNet_WFLW':
-                        landmark_predictor = PIPNet.Predictor("WFLW")
-                    elif lm_detector == 'PIPNet_300W':
-                        landmark_predictor = PIPNet.Predictor('300W_COFW_WFLW')
+            results = []
+            for n_bs_to_fit in range(1, n_bs):
 
-                    time_ret = main(video_getter, face_detector, landmark_predictor)
+                bs_to_fit = bs_names[0:n_bs_to_fit]
+                bs_to_exclude = [item for item in bs_names if item not in bs_to_fit]
 
-                    print(f_detector, 'x', lm_detector, '=', time_ret)
+                #print(bs_to_fit)
 
-                    del landmark_predictor
+                print('Fitting', n_bs_to_fit, 'blendshapes...')
 
-                del face_detector
+                time_ret = main(video_getter, face_detector, landmark_predictor, bs_to_exclude)
+
+                results.append('{n} blendshapes: {time_avg} ms'.format(n=n_bs_to_fit, time_avg=time_ret))
+
+                #print(n_bs_to_fit, 'blendshapes:', time_ret)
+            
+            for result in results:
+                print(result)
+
         except KeyboardInterrupt:
             print("Exiting...")
         except Exception as e:

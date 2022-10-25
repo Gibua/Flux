@@ -52,7 +52,7 @@ from utils.mesh import generate_w_mapper
 from VideoGet import VideoGet
 import gc
 
-from glue import RetinaFace, PFLD_UltraLight #PFLD_UltraLight, PFLD_TFLite, ULFace, RetinaFace, SynergyNet, PIPNet
+from glue import RetinaFace, SynergyNet #PFLD_UltraLight, PFLD_TFLite, ULFace, RetinaFace, SynergyNet, PIPNet
 
 
 
@@ -387,7 +387,7 @@ if __name__ == "__main__":
         video_getter.cap.release()
         sys.exit()
     else:
-        landmark_predictor = PFLD_UltraLight.Predictor()
+        landmark_predictor = SynergyNet.Predictor()
         face_detector = RetinaFace.Detector()
         try:
             main(video_getter, face_detector, landmark_predictor)

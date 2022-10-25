@@ -127,10 +127,10 @@ def map_to_original(w, n_full, idxs):
 
 class ExpressionFitting:
     def __init__(self, camera_matrix, bs_mapper=None, 
-                       bs_to_ignore = ['cheekPuff_L', 'cheekPuff_R', 'eyeLookDown_L', 'eyeLookDown_R', 
-                                       'eyeLookIn_L', 'eyeLookIn_R', 'eyeLookOut_L', 'eyeLookOut_R', 
-                                       'eyeLookUp_L', 'eyeLookUp_R']) -> None:
-                       #bs_to_ignore = ['cheekPuff_L', 'cheekPuff_R']) -> None:
+                 bs_to_ignore = ['cheekPuff_L', 'cheekPuff_R', 'eyeLookDown_L', 'eyeLookDown_R', 
+                                 'eyeLookIn_L', 'eyeLookIn_R', 'eyeLookOut_L', 'eyeLookOut_R', 
+                                 'eyeLookUp_L', 'eyeLookUp_R']) -> None:
+                 #bs_to_ignore = ['cheekPuff_L', 'cheekPuff_R']) -> None:
         self.cam_mat = jax.device_put(jnp.array(camera_matrix, dtype=jnp.float64))
         
         self.bs_mapper = bs_mapper
@@ -202,7 +202,7 @@ class ExpressionFitting:
         w_in = jnp.ones(self.n_fitted_bs, dtype=jnp.float64)*0.0001
         
         non_fitting_params = jnp.array(self.pack_params(measured_points, rmat, tvec), dtype=jnp.float64)
-        st = time.perf_counter()
+        #st = time.perf_counter()
         if method == 'jaxopt_lm':
             out = self.lm(w_in, non_fitting_params, self.cam_mat, self.former_w, self.neutral_sparse_verts, self.sparse_bs_arr, b_fit, b_prior, b_sparse)
         elif method == 'scipy_lm':
@@ -210,7 +210,7 @@ class ExpressionFitting:
         elif method == 'l-bfgs-b':
             bounds = (self.lower_bounds, self.upper_bounds)
             out = self.scipy_bounded_lbfgs(w_in, bounds, non_fitting_params, self.cam_mat, self.former_w, self.neutral_sparse_verts, self.sparse_bs_arr, b_fit, b_prior, b_sparse)
-        print("=========",time.perf_counter() - st)
+        #print("=========",time.perf_counter() - st)
         #w_out = jax.device_get(out.params)
         w_out = jnp.clip(out.params, 0, 1)
         #w_out = out.params
