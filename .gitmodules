@@ -1,6 +1,15 @@
 [submodule "Tensorflow2.0-PFLD-"]
-	path = Tensorflow2.0-PFLD-
+	path = modules/TFLitePFLD
 	url = https://github.com/Gager-Git-life/Tensorflow2.0-PFLD-.git
 [submodule "SADRNet"]
-	path = SADRNet
+	path = modules/SADRNet
 	url = https://github.com/Gibua/SADRNet.git
+[submodule "modules/faster_retinaface"]
+	path = modules/faster_retinaface
+	url = https://github.com/1996scarlet/faster-mobile-retinaface.git
+[submodule "modules/eos"]
+	path = modules/eos
+	url = https://github.com/patrikhuber/eos.git
+[submodule "modules/SynergyNet"]
+	path = modules/SynergyNet
+	url = https://github.com/choyingw/SynergyNet.git
